@@ -43,7 +43,6 @@ Putting any value other than 0 in *MBMFading* will fade out the currently playin
 
 MBMSFXPlay
 ==========
-by Kagesan
 
 MBMSFXPlay is an extension to MBMPlay and adds basic support for playing sound effects on FM channel 01, even if a Moonblaster module is being played at the same time.
 
