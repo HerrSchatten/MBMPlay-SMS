@@ -3,10 +3,10 @@ MBMPlay - SMS
 
 A port of the MoonBlaster replayer from the MSX to the Master System
 
-MoonBlaster 1.4 driver 
-MB1.4 assembly sources written by Remco Schrijvers 
-Extended by BiFi / The New Image 2012/2019 
-Adapted for the SMS by Kagesan with help from Zipper and Calindro
+MoonBlaster 1.4 driver. 
+MB1.4 assembly sources written by Remco Schrijvers. 
+Extended by BiFi / The New Image 2012/2019. 
+Adapted for the SMS by Kagesan with help from Zipper and Calindro.
 
 MBMPlay allows replaying song files created with Moonblaster 1.4 as background music in SEGA Master System homebrew programs.
 
@@ -84,19 +84,19 @@ No header
 Register/data pairs (Never use either seperately!):
 
 $10 %ffffffff = Register write marker, followed by data byte. 
-                Data byte contains 8 least significant bits of F. 
-                F is a 9-bit value that, in conjunction with the octave information, determines the pitch of the note played.
-                See YM2413 Application Manual for details on how to calculate F.
+- Data byte contains 8 least significant bits of F. 
+- F is a 9-bit value that, in conjunction with the octave information, determines the pitch of the note played.
+- See YM2413 Application Manual for details on how to calculate F.
 
 $20 %00skbbbf = Register write marker, followed by data byte.
-                s = sustain, should be 0.
-                k = key, should be 1.
-                b = octave block (0-7).
-                f = Most significant bit of F.
+- s = sustain, should be 0.
+- k = key, should be 1.
+- b = octave block (0-7).
+- f = Most significant bit of F.
 
 $30 %iiiivvvv = Register write marker, followed by data byte.
-                i = instrument number (0-15). See YM2413 Application manual for details.
-                v = volume (0-15). 0 is the highest volume, 15 is silence.
+- i = instrument number (0-15). See YM2413 Application manual for details.
+- v = volume (0-15). 0 is the highest volume, 15 is silence.
  
 
 Single byte commands:
