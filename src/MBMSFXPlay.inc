@@ -4,7 +4,7 @@
 
 .ramsection "FM SFX status" slot 3
 
-MBMSFXStatus	   db	 	    ; status: 0 = not playing, 1 = busy playing
+MBMSFXStatus    db                  ; status: 0 = not playing, 1 = busy playing
 
 .ends
 
@@ -75,7 +75,11 @@ MBMSFXRestoreInstrVol:
     ld b, 0
     add a, a
     ld c, a
-    ld hl, MBMIVList-2
+;    ld hl, MBMIVList-2
+    ld hl,(MBMIVListAddr)
+    dec hl
+    dec hl
+    
     add hl, bc
     ld a, (hl)                      ; get instrument from list
     cp 16
