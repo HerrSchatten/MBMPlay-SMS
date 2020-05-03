@@ -2,13 +2,13 @@
 ; RAM
 ;=================================================================================
 
-.def MBMIVLIST_OFFSET          $00A3      ;*
-.def MBMSTARTINSTR_OFFSET      $0101      ;*
-.def MBMOPLDATA_OFFSET         $010A      ;*
-.def MBMDRUMBLOCK_OFFSET       $0148      ;*
-.def MBMDRUMVOL_OFFSET         $0157      ;*
-.def MBMDRUMFREQ_OFFSET        $015A      ;*
-.def MBMSTARTDETUNE_OFFSET     $016E      ;* 
+.def MBMIVLIST_OFFSET          $00A3
+.def MBMSTARTINSTR_OFFSET      $0101
+.def MBMOPLDATA_OFFSET         $010A
+.def MBMDRUMBLOCK_OFFSET       $0148
+.def MBMDRUMVOL_OFFSET         $0157
+.def MBMDRUMFREQ_OFFSET        $015A
+.def MBMSTARTDETUNE_OFFSET     $016E 
 
 .ramsection "FM player variables" slot 3
 
@@ -35,20 +35,11 @@ MBMChannelBuffer   dsb 9*14         ; channel buffer
 
 ; music settings
 
-MBMIVListAddr      dw               ;* instrument/volume list address
-MBMDrumBlockAddr   dw               ;* drum set-up address
+MBMIVListAddr      dw               ; instrument/volume list address
+MBMDrumBlockAddr   dw               ; drum set-up address
 
 MBMSongLength      db               ; song length (1 byte)
-; MBMIVList          dsb 32           ; instrument/volume list
-; MBMStartTempo      db               ; start tempo
 MBMChannelInfo     db               ; number of channels: bit 6 (0-7) on is 6chn+drm, off is 9chn
-; MBMStartInstr      dsb 9            ; start instruments
-; MBMOPLData         dsb 6*8          ; original instruments OPL data
-; MBMOPLProgNr       dsb 6            ; original instruments prog nr
-; MBMDrumBlock       dsb 15           ; drum set-up
-; MBMDrumVol         dsb 3            ; drum volumes
-; MBMDrumFreq        dsb 20           ; drum frequencies
-; MBMStartDetune     dsb 9            ; start detune
 MBMLoopPoint       db               ; loop position
 
 .ends
@@ -84,54 +75,32 @@ MBMPlay:
     ld a, (MBMBank)                 ; get bank the music is placed in
     ld (BankSwitch), a              ; switch bank
     
-    ld hl,(MBMStart)         ;*
-    ld de,MBMIVLIST_OFFSET   ;*
-    add hl,de                ;*
-    ld (MBMIVListAddr),hl    ;*
-    ld de,MBMDRUMBLOCK_OFFSET-MBMIVLIST_OFFSET  ;*
-    add hl,de                ;*
-    ld (MBMDrumBlockAddr),hl ;*
+    ld hl,(MBMStart)
+    ld de,MBMIVLIST_OFFSET
+    add hl,de
+    ld (MBMIVListAddr),hl
+    ld de,MBMDRUMBLOCK_OFFSET-MBMIVLIST_OFFSET
+    add hl,de
+    ld (MBMDrumBlockAddr),hl
 
     ld hl, (MBMStart)               ; transfer first part of header
     ld de, MBMSongLength
 
-    ldi                             ; transfer song length
+    ldi                             ; transfer song length [1 byte]
 
-    ld bc, 2+144+16                 ; skip song ID, msxa voice data, msxa instrument list
+    ld bc, 2+144+16+32+10           ; skip song ID, msxa voice data, msxa instrument list, transfer fm instrument / default volume list, channel chip set
     add hl, bc
 
-    ld bc, 32
-;    ldir                            ; transfer fm instrument / default volume list
-    add hl, bc               ;*
-
-    ld bc, 10                       ; skip channel chip set
-    add hl, bc
-
-;    ldi                             ; transfer start tempo
-    ld a,(hl)                ;*
-    ld (MBMSpeed),a          ;* initialize tempo
-    inc hl                   ;*
+    ld a,(hl)                       ;
+    ld (MBMSpeed),a                 ; initialize tempo
+    inc hl                          ;
     
-    ldi                             ; transfer channel number (bit 5 on is 6 channels, off is 9 channels)
+    ldi                             ; transfer channel number (bit 5 on is 6 channels, off is 9 channels) [1 byte]
 
-    ld bc, 41+9                     ; skip song name, msxa start instruments
+    ld bc, 41+9+9+48+6+8+15+3+20+9  ; skip song name, msxa start instruments, fm start instruments (9), fm opl data (48), fm opl prog nr (6), sample kit name (8), drum set-up (15), drum volumes (3), drum frequencies (20), start detune (9)
     add hl, bc
-    
-    ld bc, 9+48+6  ;*
-    add hl,bc      ;*
 
-;    ld bc, 63
-;    ldir                            ; transfer fm start instruments (9), fm opl data (48), fm opl prog nr (6)
-
-    ld bc, 8                        ; skip sample kit name
-    add hl, bc
-    
-    ld bc,15+3+20+9   ;*
-    add hl,bc         ;* skip drum set-up (15), drum volumes (3), drum frequencies (20), start detune (9)
-
-;    ld bc, 48
-    ld bc,1
-    ldir                            ; transfer [NO drum set-up (15), drum volumes (3), drum frequencies (20), start detune (9)] loop position (1)
+    ldi                             ; transfer loop position [1 byte]
 
     ld (MBMPAT), hl                 ; set pointer to start pattern of song
     ld a, (MBMSongLength)           ; get song length
@@ -144,18 +113,16 @@ MBMPlay:
 ; set start detune and instruments (reversed?) -->
 
     ld b, 9
-;    ld iy, MBMStartInstr+8          ; iy = start instrument
-    ld de, MBMSTARTINSTR_OFFSET+8  ;*
-    ld iy, (MBMStart)              ;*
-    add iy,de                      ;*
+    ld de, MBMSTARTINSTR_OFFSET+8
+    ld iy, (MBMStart)
+    add iy,de
 
-;    ld ix, MBMStartDetune           ; ix = start detune
-    ld ix,(MBMDrumBlockAddr)                               ;*
-    ld de,MBMSTARTDETUNE_OFFSET-MBMDRUMBLOCK_OFFSET        ;*
-    add ix,de                                              ;*
+    ld ix,(MBMDrumBlockAddr)
+    ld de,MBMSTARTDETUNE_OFFSET-MBMDRUMBLOCK_OFFSET
+    add ix,de
 
     ld hl, MBMChannelBuffer+112+3
-    ld de, -17                      ; skip trhough the channels reversed
+    ld de, -17                      ; skip through the channels reversed
 
 -:  ld (hl), 0                      ; reset frequency mode
     inc hl                          ; skip frequency register
@@ -196,8 +163,6 @@ MBMPlay:
 
     call _InitInstr                 ; initialize instruments
 
-;    ld a, (MBMStartTempo)           ; set speed
-;    ld (MBMSpeed), a
     ld a, 15
     ld (MBMStep), a
 
@@ -214,10 +179,9 @@ MBMPlay:
 
 _InitInstr:
 
-;    ld hl, MBMStartInstr            ; set start instruments
-    ld hl,(MBMStart)             ;*
-    ld de,MBMSTARTINSTR_OFFSET   ;*
-    add hl,de                    ;*
+    ld hl,(MBMStart)
+    ld de,MBMSTARTINSTR_OFFSET
+    add hl,de
 
     ld iy, MBMChannelBuffer+12
 
@@ -238,9 +202,8 @@ _InitInstr:
     push hl
 
     ld a, (hl)
-;    ld hl, MBMIVList-2
-    ld hl, (MBMIVListAddr)   ;*
-    dec a                    ;*
+    ld hl, (MBMIVListAddr)
+    dec a
     
     add a, a
     ld c, a
@@ -287,12 +250,11 @@ _InitInstr:
 
 ; drums setup
 
-;    ld de, MBMDrumVol
-    ld hl,(MBMDrumBlockAddr)                       ;*
-    ld de,MBMDRUMVOL_OFFSET-MBMDRUMBLOCK_OFFSET    ;*
-    add hl,de                                      ;*
-    push hl                                        ;*
-    ex de,hl                                       ;*
+    ld hl,(MBMDrumBlockAddr)
+    ld de,MBMDRUMVOL_OFFSET-MBMDRUMBLOCK_OFFSET
+    add hl,de
+    push hl
+    ex de,hl
     
     ld hl, MBMDrumReg
     ld b, 9
@@ -307,23 +269,20 @@ _InitInstr:
 
     djnz -
     
-    pop hl                 ;*
-;    ld a, (MBMDrumVol)
-    ld a,(hl)              ;*
+    pop hl
+    ld a,(hl)
     and %00001111
     rlca
     rlca
     ld (MBMChannelBuffer+(6*14)+13), a
-;    ld a, (MBMDrumVol+1)
-    inc hl                 ;*
-    ld a,(hl)              ;*
+    inc hl
+    ld a,(hl)
     and %11110000
     rrca
     rrca
     ld (MBMChannelBuffer+(7*14)+13), a
-;    ld a, (MBMDrumVol+2)
-    inc hl                 ;*
-    ld a,(hl)              ;*
+    inc hl
+    ld a,(hl)
     and %00001111
     rlca
     rlca
@@ -335,22 +294,15 @@ _InitOPL:
 
     push hl
 
-;    sub 15                          ; get number of original istrument
-;    ld b, a
-;    ld hl, MBMOPLData-8
-;    ld de, $0008
-;-:  add hl, de
-;    djnz -                          ; move to OPL data start adress of original instrument
-
-    sub 16                     ;*
-    add a,a                    ;*
-    add a,a                    ;*
-    add a,a                    ;*
-    add a,<MBMOPLDATA_OFFSET   ;*
-    ld c,a                     ;*
-    ld b,>MBMOPLDATA_OFFSET    ;*
-    ld hl,(MBMStart)           ;*
-    add hl,bc                  ;*
+    sub 16                          ; get number of original instrument
+    add a,a
+    add a,a
+    add a,a
+    add a,<MBMOPLDATA_OFFSET
+    ld c,a
+    ld b,>MBMOPLDATA_OFFSET
+    ld hl,(MBMStart)
+    add hl,bc                       ; move to OPL data start adress of original instrument
 
     push hl                         ; save start address
 
@@ -823,8 +775,7 @@ MBMChangeInstrument:
     add a, a
     ld c, a
     ld b, 0
-;    ld hl, MBMIVList
-    ld hl,(MBMIVListAddr)   ;*
+    ld hl,(MBMIVListAddr)
     
     add hl, bc
     ld a, (hl)                      ; get instrument
@@ -876,17 +827,15 @@ _ChangeInstrCont:
 MBMChangeOriginalInstr:
 
     exx
-;    sub 15
-    sub 16                    ;*
+    sub 16
     rlca
     rlca
     rlca
-    add a, <MBMOPLDATA_OFFSET ;*
+    add a, <MBMOPLDATA_OFFSET
     ld c, a
-    ld b, >MBMOPLDATA_OFFSET  ;*    
-;    ld hl, MBMOPLData-8
-    ld hl,(MBMStart)          ;*
-    add hl, bc                ;*
+    ld b, >MBMOPLDATA_OFFSET    
+    ld hl,(MBMStart)
+    add hl, bc
 
     push hl                         ; move brightness
 
@@ -925,11 +874,10 @@ MBMChangeVolume:
 
     ld a, (iy+6)                    ; get instrument
     ld b, 0
-    dec a                  ;*
+    dec a
     add a, a
     ld c, a
-;    ld hl, MBMIVList-2
-    ld hl,(MBMIVListAddr)  ;*
+    ld hl,(MBMIVListAddr)
     add hl, bc
     ld a, (hl)
     cp 16
@@ -1017,8 +965,7 @@ MBMChangeBrightness:
     add a, a
     ld e, a
     ld d, 0
-;    ld hl, MBMIVList
-    ld hl, (MBMIVListAddr)  ;*
+    ld hl, (MBMIVListAddr)
     add hl, de
     ld a, (hl)
     cp 16                           ; is instrument original?
@@ -1062,14 +1009,13 @@ MBMPlayDrum:
     or a
     ret z
 
-    dec a                       ; *
+    dec a
     ld e, a
     ld d, 0
 
     push hl
 
-;    ld hl, MBMDrumBlock-1
-    ld hl,(MBMDrumBlockAddr)    ; *
+    ld hl,(MBMDrumBlockAddr)
     add hl, de
     ld a, (hl)
     ld c, a
@@ -1112,10 +1058,9 @@ MBMChangeDrumset:                   ; change drumset
     add a, b
     ld e, a
     ld d, 0
-;    ld hl, MBMDrumFreq
-    ld hl,(MBMDrumBlockAddr)                       ;*
-    ld bc,MBMDRUMFREQ_OFFSET-MBMDRUMBLOCK_OFFSET   ;*
-    add hl,bc                                      ;*
+    ld hl,(MBMDrumBlockAddr)
+    ld bc,MBMDRUMFREQ_OFFSET-MBMDRUMBLOCK_OFFSET
+    add hl,bc
     add hl, de
     ex de, hl
     ld hl, MBMDrumReg+3
@@ -1195,8 +1140,7 @@ _LoopThroughChannels:
     add a, a
     ld c, a
     ld b, 0
-;    ld hl, MBMIVList
-    ld hl, (MBMIVListAddr)  ;*
+    ld hl, (MBMIVListAddr)
     add hl, bc
     ld a, (hl)
     cp 16                           ; check if original instrument

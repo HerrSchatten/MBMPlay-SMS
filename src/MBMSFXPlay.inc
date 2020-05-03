@@ -72,13 +72,12 @@ MBMSFXRestoreInstrVol:
     ld (MBMSFXDelayIVR), a          ; reset delay timer
 
     ld a, (MBMChannelBuffer+6)      ; get instrument number
+    dec a
     ld b, 0
     add a, a
     ld c, a
-;    ld hl, MBMIVList-2
     ld hl,(MBMIVListAddr)
-    dec hl
-    dec hl
+
     
     add hl, bc
     ld a, (hl)                      ; get instrument from list
