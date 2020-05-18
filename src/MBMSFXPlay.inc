@@ -104,9 +104,22 @@ MBMSFXSilence:
 
     xor a
     ld c, $10                       ; set frequency to zero, key off
-    call FMOut
+;    call FMOut
+    call FMOutFast ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*    
+    nop   ;*
     ld c, $20
-    jp FMOut
+;    jp FMOut
+    jp FMOutFast ;*
 
 .ends
 

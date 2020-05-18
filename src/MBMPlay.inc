@@ -88,7 +88,7 @@ MBMPlay:
 
     ldi                             ; transfer song length [1 byte]
 
-    ld bc, 2+144+16+32+10           ; skip song ID, msxa voice data, msxa instrument list, transfer fm instrument / default volume list, channel chip set
+    ld bc, 2+144+16+32+10           ; skip song ID, msxa voice data, msxa instrument list, fm instrument / default volume list, channel chip set
     add hl, bc
 
     ld a,(hl)                       ;
@@ -230,7 +230,8 @@ _InitInstr:
     pop hl
     pop bc
 
-    call FMOut
+;    call FMOut
+    call FMOutFast ;*
 
     inc hl                          ; next start instrument
     inc c                           ; next register to write to
@@ -241,6 +242,10 @@ _InitInstr:
 
     xor a
     ld c, 14
+    
+            ;* 75
+    ret nz  ;*  (always false, wait 5 cycles)
+    nop     ;*
 
     call FMOutFast
 
@@ -262,7 +267,9 @@ _InitInstr:
 -:  ld c, (hl)                      ; get register
     ld a, (de)                      ; get data
 
-    call FMOut
+;    call FMOut
+    call FMOutFast ;*
+                   ;* 85
 
     inc hl
     inc de
@@ -317,7 +324,12 @@ _InitOPL:
 
 -:  ld a, (hl)                      ; get OPL data
 
-    call FMOut
+;    call FMOut
+    call FMOutFast ;*
+    
+         ;* 76
+    nop  ;*
+    nop  ;*
 
     inc c                           ; next register
     inc hl                          ; next data byte
@@ -729,12 +741,18 @@ MBMKeyOn:
     call z, FMOutFast
     set 4, a
     ld (iy+1), a                    ; write  frequency
-    sub 0                           ; waste cycles
-    nop
+;    sub 0                           ; waste cycles
+;    nop
     bit 0, d                        ; check if sfx is playing
-    jp z, FMOutFast
+
+;    jp z, FMOutFast
+;    ret
+
+    ret nz
+           ;* 79
+    ret nz ;* always false, just to wait 5 cycles
     
-    ret
+    jp FMOutFast
 
 ; note off event (sustained) -->
 
@@ -1029,7 +1047,18 @@ MBMPlayDrum:
     ld a, c
     and %00011111
     ld c, $0E
-    call FMOut
+;    call FMOut
+    call FMOutFast ;*
+    
+          ;* 47
+    sub 0 ;*
+    sub 0 ;*
+    sub 0 ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*
+
     set 5, a
     jp FMOutFast
 
@@ -1305,28 +1334,28 @@ _Modulate:
 
 .section "FM out routines" free
 
-FMOut:
-
-    ex af, af'
-    ld a, c
-    out ($F0), a
-    ex af, af'
-    out ($F1), a
-    ex (sp), hl
-    ex (sp), hl
-
-    ret
+;FMOut:
+;* C contains FM register #, A contains data
+;    ex af, af'
+;    ld a, c
+;    out ($F0), a
+;    ex af, af'
+;    out ($F1), a
+;    ex (sp), hl
+;    ex (sp), hl
+;    ret
 
 FMOutFast:
+;* C contains FM register #, A contains data
 
-    ex af, af'
-    ld a, c
-    out ($F0), a
-    ex af, af'
-    out ($F1), a
-
-    ret
-
+    ; to call here / to jp here:   17/10
+    ex af, af'                 ;     4
+    ld a, c                    ;     4
+    out ($F0), a               ;    11
+    ex af, af'                 ;     -
+    out ($F1), a               ;     -
+    ret                        ;    10
+                        ; total =  46/39
 .ends
 
 .section "Stop FM" free
@@ -1372,15 +1401,23 @@ _MSXOut:
 +:  ld c, (iy+4)                    ; read frequency register
     xor a
     dec ixl                         ; check if sfx is playing
-    call nz, FMOut                  ; set frequency to 0
+;    call nz, FMOut                  ; set frequency to 0
+    call nz, FMOutFast ;*
     ld a, c                         ; set volume register
     add a, $10
     ld c, a
     xor a                           ; set key to off
     inc ixl                         ; check if sfx is playing
-    jp z, FMOutFast
     
-    ret
+;    jp z, FMOutFast
+;    ret
+
+    ret nz
+           ;* 71
+    sub 0  ;*
+    sub 0  ;*
+    
+    jp FMOutFast
 
 .ends
 
@@ -1404,7 +1441,6 @@ MBMCancelLoop:
 ; MSX-MUSIC data -->
 
 MBMFreqencyLUT:
-
 .db $AD $00 $B7 $00 $C2 $00 $CD $00 $D9 $00 $E6 $00
 .db $F4 $00 $03 $01 $12 $01 $22 $01 $34 $01 $46 $01
 .db $AD $02 $B7 $02 $C2 $02 $CD $02 $D9 $02 $E6 $02
