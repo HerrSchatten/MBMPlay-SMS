@@ -98,14 +98,13 @@ MBMSFXRestoreInstrVol:
     xor b                           ; combine volume with instrument
     
     ld c, $30
-    jp FMOutFast                    ; restore instrument and volume, return
+    jp FMOut                    ; restore instrument and volume, return
 
 MBMSFXSilence:
 
     xor a
     ld c, $10                       ; set frequency to zero, key off
-;    call FMOut
-    call FMOutFast ;*
+    call FMOut ;*
     nop   ;*
     nop   ;*
     nop   ;*
@@ -118,8 +117,7 @@ MBMSFXSilence:
     nop   ;*    
     nop   ;*
     ld c, $20
-;    jp FMOut
-    jp FMOutFast ;*
+    jp FMOut ;*
 
 .ends
 
@@ -177,7 +175,7 @@ MBMSFXFrame:
 +:  ld c, a                         ; if a > 15, then it's a register number
     inc hl                          ; move to data byte
     ld a, (hl)                      ; read data byte
-    call FMOutFast
+    call FMOut
     inc hl                          ; move to next command / register byte
 
     jp -                            ; repeat until frame ends

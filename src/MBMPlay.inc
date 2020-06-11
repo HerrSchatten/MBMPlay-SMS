@@ -230,8 +230,7 @@ _InitInstr:
     pop hl
     pop bc
 
-;    call FMOut
-    call FMOutFast ;*
+    call FMOut ;*
 
     inc hl                          ; next start instrument
     inc c                           ; next register to write to
@@ -247,7 +246,7 @@ _InitInstr:
     ret nz  ;*  (always false, wait 5 cycles)
     nop     ;*
 
-    call FMOutFast
+    call FMOut
 
     pop af                          ; restore flags for test 9 or 6 fm channels
 
@@ -267,8 +266,7 @@ _InitInstr:
 -:  ld c, (hl)                      ; get register
     ld a, (de)                      ; get data
 
-;    call FMOut
-    call FMOutFast ;*
+    call FMOut ;*
                    ;* 85
 
     inc hl
@@ -324,8 +322,7 @@ _InitOPL:
 
 -:  ld a, (hl)                      ; get OPL data
 
-;    call FMOut
-    call FMOutFast ;*
+    call FMOut ;*
     
          ;* 76
     nop  ;*
@@ -731,28 +728,22 @@ MBMKeyOn:
     ld a, (iy+11)                   ; read original frequency
     ld c, (iy+4)                    ; get register
     bit 0, d                        ; check if sfx is playing
-    call z, FMOutFast
+    call z, FMOut
     ld (iy+0), a                    ; write frequency
     ld a, c
     add a, $10
     ld c, a
     ld a, (iy+10)                   ; read original frequency
     bit 0, d                        ; check if sfx is playing
-    call z, FMOutFast
+    call z, FMOut
     set 4, a
     ld (iy+1), a                    ; write  frequency
-;    sub 0                           ; waste cycles
-;    nop
     bit 0, d                        ; check if sfx is playing
-
-;    jp z, FMOutFast
-;    ret
-
     ret nz
            ;* 79
-    ret nz ;* always false, just to wait 5 cycles
+    ret nz ;* always false, here just to wait 5 cycles
     
-    jp FMOutFast
+    jp FMOut
 
 ; note off event (sustained) -->
 
@@ -770,7 +761,7 @@ MBMKeyOff:
 +:  ld c, (iy+4)                    ; get register
     ld a, (iy+0)                    ; read frequency
     bit 0, d                        ; check if sfx is playing
-    call z, FMOutFast
+    call z, FMOut
     ld a, c
     add a, $10                      ; next register
     ld c, a
@@ -779,7 +770,7 @@ MBMKeyOff:
     or l
     ld (iy+1), a                    ; write frequency
     bit 0, d                        ; check if sfx is playing
-    jp z, FMOutFast
+    jp z, FMOut
 
     ret
 
@@ -815,7 +806,7 @@ _ChangeInstrCont:
 
     ld c, (iy+7)                    ; read volume register
     bit 0, d                        ; check if sfx is playing
-    call z, FMOutFast
+    call z, FMOut
 
     pop bc
 
@@ -838,7 +829,7 @@ _ChangeInstrCont:
     add a, b
     ld c, (iy+7)
     bit 0, d                        ; check if sfx is playing
-    jp z, FMOutFast                 ; write the changed volume to the FM registers
+    jp z, FMOut                 ; write the changed volume to the FM registers
     
     ret
 
@@ -867,7 +858,7 @@ MBMChangeOriginalInstr:
     ld bc, $0800
 
 -:  ld a, (hl)
-    call FMOutFast
+    call FMOut
     inc c
     inc hl
     nop                             ; waste cycles
@@ -912,7 +903,7 @@ MBMChangeVolume:
 
     xor b
     bit 0, d                        ; check if sfx is playing
-    call z, FMOutFast
+    call z, FMOut
     ld l, b
 
     pop bc
@@ -934,7 +925,7 @@ MBMChangeVolume:
     xor l
     ld c, (iy+7)
     bit 0, d                        ; check if sfx is playing
-    jp z, FMOutFast
+    jp z, FMOut
     
     ret
 
@@ -961,7 +952,7 @@ MBMLinkNote:
     ld (iy+0), a                    ; write new frequency
     ld c, (iy+4)                    ; get register
     bit 0, d                        ; check if sfx is playing
-    call z, FMOutFast
+    call z, FMOut
     ld a, c
     add a, 010h                     ; next register
     ld c, a
@@ -970,7 +961,7 @@ MBMLinkNote:
     ld (iy+1), a                    ; write new frequency
     ld (iy+3), 0                    ; reset frequency mode
     bit 0, d                        ; check if sfx is playing
-    jp z, FMOutFast
+    jp z, FMOut
     
     ret
 
@@ -1000,7 +991,7 @@ MBMChangeBrightness:
     add a, e
     ld (iy+12), a
     ld c, 2
-    jp FMOutFast
+    jp FMOut
 
 ; change pitch bend -->
 
@@ -1047,8 +1038,7 @@ MBMPlayDrum:
     ld a, c
     and %00011111
     ld c, $0E
-;    call FMOut
-    call FMOutFast ;*
+    call FMOut ;*
     
           ;* 47
     sub 0 ;*
@@ -1060,7 +1050,7 @@ MBMPlayDrum:
     nop   ;*
 
     set 5, a
-    jp FMOutFast
+    jp FMOut
 
 ; command routines -->
 
@@ -1097,7 +1087,7 @@ MBMChangeDrumset:                   ; change drumset
 
 -:  ld c, (hl)
     ld a, (de)
-    call FMOutFast
+    call FMOut
     inc hl
     inc de
     djnz -
@@ -1195,7 +1185,7 @@ _FadeChannel:
     ld c, (iy+7)                    ; get volume register
     add a, b                        ; combine volume and instrument
     dec ixl                         ; check if sfx is playing
-    call nz, FMOutFast
+    call nz, FMOut
 
     pop hl
 
@@ -1283,7 +1273,7 @@ _PitchLoop:
     ld c, (iy+4)                    ; get frequency register
     ld a, l
     dec ixl
-    call nz, FMOutFast
+    call nz, FMOut
     ld a, c
     add a, $10                      ; next register
     ld c, a
@@ -1291,7 +1281,7 @@ _PitchLoop:
     or b
     ld (iy+1), a                    ; write frequency
     inc ixl 
-    jp z, FMOutFast
+    jp z, FMOut
 
     ret
 
@@ -1332,20 +1322,9 @@ _Modulate:
 
 .ends
 
-.section "FM out routines" free
+.section "FM out routine" free
 
-;FMOut:
-;* C contains FM register #, A contains data
-;    ex af, af'
-;    ld a, c
-;    out ($F0), a
-;    ex af, af'
-;    out ($F1), a
-;    ex (sp), hl
-;    ex (sp), hl
-;    ret
-
-FMOutFast:
+FMOut:
 ;* C contains FM register #, A contains data
 
     ; to call here / to jp here:   17/10
@@ -1401,23 +1380,19 @@ _MSXOut:
 +:  ld c, (iy+4)                    ; read frequency register
     xor a
     dec ixl                         ; check if sfx is playing
-;    call nz, FMOut                  ; set frequency to 0
-    call nz, FMOutFast ;*
+    call nz, FMOut ;*
     ld a, c                         ; set volume register
     add a, $10
     ld c, a
     xor a                           ; set key to off
     inc ixl                         ; check if sfx is playing
-    
-;    jp z, FMOutFast
-;    ret
 
     ret nz
            ;* 71
     sub 0  ;*
     sub 0  ;*
     
-    jp FMOutFast
+    jp FMOut
 
 .ends
 
