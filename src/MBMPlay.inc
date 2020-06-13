@@ -42,6 +42,8 @@ MBMSongLength      db               ; song length (1 byte)
 MBMChannelInfo     db               ; number of channels: bit 6 (0-7) on is 6chn+drm, off is 9chn
 MBMLoopPoint       db               ; loop position
 
+
+MBMLastCustInstr   db               ; last programmed custom instrument
 .ends
 
 
@@ -71,6 +73,7 @@ MBMPlay:
     dec a
     ld (MBMPosition), a             ; reset position
     ld (MBMStatus), a               ; set status to "playing"
+    ld (MBMLastCustInstr),a         ;* reset last custom instrument
 
     ld a, (MBMBank)                 ; get bank the music is placed in
     ld (BankSwitch), a              ; switch bank
@@ -300,6 +303,8 @@ _InitOPL:
     push hl
 
     sub 16                          ; get number of original instrument
+    ld hl,MBMLastCustInstr          ;* save instrument number to avoid setting same instrument again later
+    ld (hl),a                       ;*
     add a,a
     add a,a
     add a,a
@@ -837,6 +842,12 @@ MBMChangeOriginalInstr:
 
     exx
     sub 16
+    
+    ld hl,MBMLastCustInstr          ;* avoid setting same instrument again
+    cp (hl)
+    jr z,_skipChangeOriginalInstr
+    ld (hl),a                       ;* save instrument number
+    
     rlca
     rlca
     rlca
@@ -864,6 +875,8 @@ MBMChangeOriginalInstr:
     nop                             ; waste cycles
     nop
     djnz -
+    
+_skipChangeOriginalInstr:    
 
     exx
     xor a
