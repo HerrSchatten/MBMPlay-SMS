@@ -186,7 +186,7 @@ _InitInstr:
     ld de,MBMSTARTINSTR_OFFSET
     add hl,de
 
-    ld iy, MBMChannelBuffer+12
+    ld iy, MBMChannelBuffer
 
     ld b, 6
 
@@ -215,7 +215,7 @@ _InitInstr:
 
     ld a, (hl)                      ; get start instrument
     cp 16                           ; check if hardware instrument or original
-    call nc, _InitOPL               ; if instr no. > 15, then it's a software instrument --> set it up
+    call nc, _InitOPL               ; if instr number >= 16, then it's a software instrument --> set it up
     rlca                            ; get instrument number into upper nibble
     rlca
     rlca
@@ -226,7 +226,7 @@ _InitInstr:
     add a, b                        ; combine with instrument
     rlc b
     rlc b
-    ld (iy+1), b                    ; write FM volume
+    ld (iy+13), b                   ; write FM volume
     ld bc, 14
     add iy, bc                      ; move to next channel
 
@@ -303,41 +303,11 @@ _InitOPL:
     push hl
 
     sub 16                          ; get number of original instrument
-    ld hl,MBMLastCustInstr          ;* save instrument number to avoid setting same instrument again later
-    ld (hl),a                       ;*
-    add a,a
-    add a,a
-    add a,a
-    add a,<MBMOPLDATA_OFFSET
-    ld c,a
-    ld b,>MBMOPLDATA_OFFSET
-    ld hl,(MBMStart)
-    add hl,bc                       ; move to OPL data start adress of original instrument
-
-    push hl                         ; save start address
-
-    inc hl
-    inc hl
-    ld a, (hl)
-    ld (iy+0), a
-
-    pop hl                          ; revert to OPL data start adress
-
-    ld bc, $0800
-
--:  ld a, (hl)                      ; get OPL data
-
-    call FMOut ;*
     
-         ;* 76
-    nop  ;*
-    nop  ;*
-
-    inc c                           ; next register
-    inc hl                          ; next data byte
-
-    djnz -                          ; repeat 8 times
-
+    ld hl,MBMLastCustInstr          ; avoid setting same instrument again
+    cp (hl)
+    call nz,MBMReprogramCustomInstr ; if not same instrument, reprogram chip
+    
     pop hl                          ; revert to instr/vol pair list position
 
     xor a                           ; instrument number of original instrument is 0
@@ -843,40 +813,9 @@ MBMChangeOriginalInstr:
     exx
     sub 16
     
-    ld hl,MBMLastCustInstr          ;* avoid setting same instrument again
+    ld hl,MBMLastCustInstr          ; avoid setting same instrument again
     cp (hl)
-    jr z,_skipChangeOriginalInstr
-    ld (hl),a                       ;* save instrument number
-    
-    rlca
-    rlca
-    rlca
-    add a, <MBMOPLDATA_OFFSET
-    ld c, a
-    ld b, >MBMOPLDATA_OFFSET    
-    ld hl,(MBMStart)
-    add hl, bc
-
-    push hl                         ; move brightness
-
-    inc hl
-    inc hl
-    ld a, (hl)                      ; get instrument
-    ld (iy+12), a                   ; write instrument
-
-    pop hl
-
-    ld bc, $0800
-
--:  ld a, (hl)
-    call FMOut
-    inc c
-    inc hl
-    nop                             ; waste cycles
-    nop
-    djnz -
-    
-_skipChangeOriginalInstr:    
+    call nz,MBMReprogramCustomInstr ; if not same instrument, reprogram chip
 
     exx
     xor a
@@ -1125,6 +1064,45 @@ MBMChangeTransposeValue:
 
     sub 55-48
     ld (MBMTransposeValue), a
+
+    ret
+    
+; reprogram OPL custom instrument
+
+MBMReprogramCustomInstr:
+
+    ld (hl),a                       ; save instrument number to avoid setting same instrument again later
+    
+    add a,a
+    add a,a
+    add a,a
+    add a, <MBMOPLDATA_OFFSET
+    ld c, a
+    ld b, >MBMOPLDATA_OFFSET    
+    ld hl,(MBMStart)
+    add hl, bc                      ; move to OPL data start address of original instrument
+
+    push hl                         ; save start address
+
+    inc hl
+    inc hl
+    ld a, (hl)                      ; get instrument
+    ld (iy+12), a                   ; write instrument
+
+    pop hl                          ; revert to OPL data start adress
+
+    ld bc, $0800                    ; 8 registers, starting from $00
+
+-:  ld a, (hl)                      ; get OPL data
+    call FMOut
+    
+                                    ; cycles = 76
+    nop                             ;
+    nop                             ; +8 = 84
+    
+    inc c                           ; next register
+    inc hl                          ; next data byte
+    djnz -                          ; repeat 8 times
 
     ret
 
