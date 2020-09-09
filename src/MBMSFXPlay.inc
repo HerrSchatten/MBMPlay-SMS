@@ -4,7 +4,7 @@
 
 .ramsection "FM SFX status" slot 3
 
-MBMSFXStatus	   db	 	    ; status: 0 = not playing, 1 = busy playing
+MBMSFXStatus    db                  ; status: 0 = not playing, 1 = busy playing
 
 .ends
 
@@ -72,10 +72,13 @@ MBMSFXRestoreInstrVol:
     ld (MBMSFXDelayIVR), a          ; reset delay timer
 
     ld a, (MBMChannelBuffer+6)      ; get instrument number
+    dec a
     ld b, 0
     add a, a
     ld c, a
-    ld hl, MBMIVList-2
+    ld hl,(MBMIVListAddr)
+
+    
     add hl, bc
     ld a, (hl)                      ; get instrument from list
     cp 16
@@ -95,15 +98,26 @@ MBMSFXRestoreInstrVol:
     xor b                           ; combine volume with instrument
     
     ld c, $30
-    jp FMOutFast                    ; restore instrument and volume, return
+    jp FMOut                    ; restore instrument and volume, return
 
 MBMSFXSilence:
 
     xor a
     ld c, $10                       ; set frequency to zero, key off
-    call FMOut
+    call FMOut ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*
+    nop   ;*    
+    nop   ;*
     ld c, $20
-    jp FMOut
+    jp FMOut ;*
 
 .ends
 
@@ -161,7 +175,7 @@ MBMSFXFrame:
 +:  ld c, a                         ; if a > 15, then it's a register number
     inc hl                          ; move to data byte
     ld a, (hl)                      ; read data byte
-    call FMOutFast
+    call FMOut
     inc hl                          ; move to next command / register byte
 
     jp -                            ; repeat until frame ends
