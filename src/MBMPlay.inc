@@ -73,7 +73,7 @@ MBMPlay:
     dec a
     ld (MBMPosition), a             ; reset position
     ld (MBMStatus), a               ; set status to "playing"
-    ld (MBMLastCustInstr),a         ;* reset last custom instrument
+    ld (MBMLastCustInstr),a         ; reset last custom instrument
 
     ld a, (MBMBank)                 ; get bank the music is placed in
     ld (BankSwitch), a              ; switch bank
@@ -233,7 +233,7 @@ _InitInstr:
     pop hl
     pop bc
 
-    call FMOut ;*
+    call FMOut
 
     inc hl                          ; next start instrument
     inc c                           ; next register to write to
@@ -245,9 +245,9 @@ _InitInstr:
     xor a
     ld c, 14
     
-            ;* 75
-    ret nz  ;*  (always false, wait 5 cycles)
-    nop     ;*
+            ; 75
+    ret nz  ; (always false, wait 5 cycles)
+    nop     ;
 
     call FMOut
 
@@ -269,8 +269,8 @@ _InitInstr:
 -:  ld c, (hl)                      ; get register
     ld a, (de)                      ; get data
 
-    call FMOut ;*
-                   ;* 85
+    call FMOut 
+               ;* 85
 
     inc hl
     inc de
@@ -716,7 +716,7 @@ MBMKeyOn:
     bit 0, d                        ; check if sfx is playing
     ret nz
            ;* 79
-    ret nz ;* always false, here just to wait 5 cycles
+    ret nz ; always false, here just to wait 5 cycles
     
     jp FMOut
 
@@ -990,7 +990,7 @@ MBMPlayDrum:
     ld a, c
     and %00011111
     ld c, $0E
-    call FMOut ;*
+    call FMOut
     
           ;* 47
     sub 0 ;*
@@ -1195,21 +1195,10 @@ _FadeChannel:
     dec b
     jp nz, _LoopThroughChannels
 
-;*    ld de, $0000
-;*
-;*    ld a, h                         ; fading done?
-;*    sub d
-;*    ret nz
-;*
-;*    ld a, l
-;*    sub e
-;*    ret nz
+    ld a,h                          ; fading done?
+    or l
+    ret nz
 
-    ld a,h                          ;* fading done?
-    or l                            ;*
-    ret nz                          ;*
-
-;*    xor a                         ;* useless
     ld (MBMStatus), a               ; set status to 'not playing'
     ret
 
@@ -1320,7 +1309,7 @@ _Modulate:
 .section "FM out routine" free
 
 FMOut:
-;* C contains FM register #, A contains data
+; C contains FM register #, A contains data
 
     ; to call here / to jp here:   17/10
     ex af, af'                 ;     4
@@ -1375,7 +1364,7 @@ _MSXOut:
 +:  ld c, (iy+4)                    ; read frequency register
     xor a
     dec ixl                         ; check if sfx is playing
-    call nz, FMOut ;*
+    call nz, FMOut
     ld a, c                         ; set volume register
     add a, $10
     ld c, a
