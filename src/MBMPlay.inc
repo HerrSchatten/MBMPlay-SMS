@@ -167,7 +167,7 @@ MBMPlay:
     ld (MBMTransposeValue), a
     
     ld a, (MBMSpeed)                ; skip leading silence
-    sub 2
+    dec a
     ld (MBMSpeedCounter), a         
     
     jp MBMFrame                     ; refresh step buffer, end setup
