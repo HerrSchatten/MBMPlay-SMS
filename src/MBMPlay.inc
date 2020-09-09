@@ -1195,17 +1195,21 @@ _FadeChannel:
     dec b
     jp nz, _LoopThroughChannels
 
-    ld de, $0000
+;*    ld de, $0000
+;*
+;*    ld a, h                         ; fading done?
+;*    sub d
+;*    ret nz
+;*
+;*    ld a, l
+;*    sub e
+;*    ret nz
 
-    ld a, h                         ; fading done?
-    sub d
-    ret nz
+    ld a,h                          ;* fading done?
+    or l                            ;*
+    ret nz                          ;*
 
-    ld a, l
-    sub e
-    ret nz
-
-    xor a
+;*    xor a                         ;* useless
     ld (MBMStatus), a               ; set status to 'not playing'
     ret
 
