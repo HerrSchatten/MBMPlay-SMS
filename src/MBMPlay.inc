@@ -1234,6 +1234,8 @@ MBMDoPitchBend:
     ld ixl, 0                       ; reset sfx flag
     djnz -
 
+    exx                             ; revert to original set of register pairs
+    
     ret
 
 _Pitch:
