@@ -967,7 +967,6 @@ MBMPlayDrum:
 
     ld a, (hl)
     and %00001111
-    or a
     ret z
 
     dec a
@@ -978,8 +977,7 @@ MBMPlayDrum:
 
     ld hl,(MBMDrumBlockAddr)
     add hl, de
-    ld a, (hl)
-    ld c, a
+    ld b, (hl)
 
     pop hl
 
@@ -987,11 +985,10 @@ MBMPlayDrum:
     and %00100000
     ret z
 
-    ld a, c
-    and %00011111
+    ld a, $20                       ; clear all rhythm instruments to set up trigger for next write
     ld c, $0E
     call FMOut
-    
+
           ;* 47
     sub 0 ;*
     sub 0 ;*
@@ -999,8 +996,8 @@ MBMPlayDrum:
     nop   ;*
     nop   ;*
     nop   ;*
-    nop   ;*
 
+    ld a, b
     set 5, a
     jp FMOut
 
